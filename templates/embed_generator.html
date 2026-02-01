@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed Generator - Scoop Creations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .navbar {
+            background: #16213e;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .navbar-brand {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #c8d0d6;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #eee;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: #0f3460;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .editor-panel {
+            background: #16213e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .preview-panel {
+            background: #16213e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-picker {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            margin: 30px 0 15px 0;
+            color: #c8d0d6;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .button-inputs {
+            display: grid;
+            gap: 15px;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 2fr 2fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .btn-add-button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add-button:hover {
+            background: #5568d3;
+        }
+
+        .btn-remove {
+            padding: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 15px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-send:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        /* Preview Styles */
+        .embed-preview {
+            border-left: 4px solid #667eea;
+            background: #2f3136;
+            padding: 16px;
+            border-radius: 4px;
+            color: #dcddde;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        .embed-author {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .embed-author-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .embed-author-name {
+            font-weight: 600;
+            font-size: 0.875em;
+        }
+
+        .embed-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #00b0f4;
+        }
+
+        .embed-description {
+            font-size: 0.875em;
+            line-height: 1.375em;
+            white-space: pre-wrap;
+            color: #dcddde;
+        }
+
+        .embed-image {
+            margin-top: 16px;
+            border-radius: 4px;
+            max-width: 100%;
+        }
+
+        .embed-thumbnail {
+            float: right;
+            margin-left: 16px;
+            max-width: 80px;
+            border-radius: 4px;
+        }
+
+        .embed-footer {
+            margin-top: 8px;
+            font-size: 0.75em;
+            color: #72767d;
+        }
+
+        .embed-buttons {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .embed-button {
+            padding: 2px 16px;
+            height: 32px;
+            background: #5865f2;
+            color: white;
+            border-radius: 3px;
+            font-size: 0.875em;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            border: none;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-panel {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📝 Embed Generator</div>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/moderation" class="nav-link">Moderation</a>
+            <a href="/embed-generator" class="nav-link">Embed Generator</a>
+            <a href="/logout" class="nav-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>📝 Embed Generator</h1>
+            <p>Create beautiful custom embeds to post in any channel</p>
+        </div>
+
+        <!-- Editor Panel -->
+        <div class="editor-panel">
+            <h2>⚙️ Editor</h2>
+
+            <!-- Channel Selection -->
+            <div class="form-group">
+                <label>Channel *</label>
+                <select id="channelSelect" class="form-select" required>
+                    <option value="">Select a channel...</option>
+                </select>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="section-title">Basic Info</div>
+
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="titleInput" class="form-input" placeholder="Embed title">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="descriptionInput" class="form-textarea" placeholder="Embed description (supports Discord markdown)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-input-group">
+                    <input type="color" id="colorPicker" class="color-picker" value="#c8d0d6">
+                    <input type="text" id="colorInput" class="form-input" value="#c8d0d6" placeholder="#RRGGBB">
+                </div>
+            </div>
+
+            <!-- Author -->
+            <div class="section-title">Author</div>
+
+            <div class="form-group">
+                <label>Author Name</label>
+                <input type="text" id="authorNameInput" class="form-input" placeholder="Author name" value="Scoop Creations">
+            </div>
+
+            <div class="form-group">
+                <label>Author Icon URL</label>
+                <input type="text" id="authorIconInput" class="form-input" placeholder="https://...">
+            </div>
+
+            <!-- Media -->
+            <div class="section-title">Media</div>
+
+            <div class="form-group">
+                <label>Image URL (Banner)</label>
+                <input type="text" id="imageInput" class="form-input" placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label>Thumbnail URL</label>
+                <input type="text" id="thumbnailInput" class="form-input" placeholder="https://...">
+            </div>
+
+            <!-- Footer -->
+            <div class="section-title">Footer</div>
+
+            <div class="form-group">
+                <label>Footer Text</label>
+                <input type="text" id="footerInput" class="form-input" placeholder="Footer text">
+            </div>
+
+            <!-- Buttons -->
+            <div class="section-title">Buttons (Links)</div>
+
+            <div id="buttonsContainer" class="button-inputs">
+                <!-- Buttons will be added here -->
+            </div>
+
+            <button class="btn-add-button" onclick="addButton()">➕ Add Button</button>
+
+            <!-- Send Button -->
+            <button class="btn-send" onclick="sendEmbed()">🚀 Send Embed</button>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <h2>👁️ Preview</h2>
+            <div id="embedPreview" class="embed-preview">
+                <div id="previewAuthor" class="embed-author" style="display: none;">
+                    <img id="previewAuthorIcon" class="embed-author-icon" style="display: none;">
+                    <span id="previewAuthorName" class="embed-author-name">Scoop Creations</span>
+                </div>
+                <img id="previewThumbnail" class="embed-thumbnail" style="display: none;">
+                <div id="previewTitle" class="embed-title"></div>
+                <div id="previewDescription" class="embed-description"></div>
+                <img id="previewImage" class="embed-image" style="display: none;">
+                <div id="previewFooter" class="embed-footer" style="display: none;"></div>
+                <div id="previewButtons" class="embed-buttons"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let buttonCount = 0;
+
+        // Load channels on page load
+        async function loadChannels() {
+            try {
+                const response = await fetch('/api/channels');
+                const channels = await response.json();
+                
+                const select = document.getElementById('channelSelect');
+                channels.forEach(channel => {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = `# ${channel.name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading channels:', error);
+            }
+        }
+
+        // Color picker sync
+        document.getElementById('colorPicker').addEventListener('input', (e) => {
+            document.getElementById('colorInput').value = e.target.value;
+            updatePreview();
+        });
+
+        document.getElementById('colorInput').addEventListener('input', (e) => {
+            const color = e.target.value;
+            if (/^#[0-9A-F]{6}$/i.test(color)) {
+                document.getElementById('colorPicker').value = color;
+            }
+            updatePreview();
+        });
+
+        // Real-time preview updates
+        ['titleInput', 'descriptionInput', 'authorNameInput', 'authorIconInput', 
+         'imageInput', 'thumbnailInput', 'footerInput'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        function updatePreview() {
+            const preview = document.getElementById('embedPreview');
+            const color = document.getElementById('colorInput').value;
+            
+            // Update border color
+            if (/^#[0-9A-F]{6}$/i.test(color)) {
+                preview.style.borderLeftColor = color;
+            }
+
+            // Author
+            const authorName = document.getElementById('authorNameInput').value;
+            const authorIcon = document.getElementById('authorIconInput').value;
+            const authorDiv = document.getElementById('previewAuthor');
+            const authorIconImg = document.getElementById('previewAuthorIcon');
+            const authorNameSpan = document.getElementById('previewAuthorName');
+            
+            if (authorName) {
+                authorDiv.style.display = 'flex';
+                authorNameSpan.textContent = authorName;
+                if (authorIcon) {
+                    authorIconImg.src = authorIcon;
+                    authorIconImg.style.display = 'block';
+                } else {
+                    authorIconImg.style.display = 'none';
+                }
+            } else {
+                authorDiv.style.display = 'none';
+            }
+
+            // Title
+            const title = document.getElementById('titleInput').value;
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewTitle').style.display = title ? 'block' : 'none';
+
+            // Description
+            const desc = document.getElementById('descriptionInput').value;
+            document.getElementById('previewDescription').textContent = desc;
+            document.getElementById('previewDescription').style.display = desc ? 'block' : 'none';
+
+            // Image
+            const image = document.getElementById('imageInput').value;
+            const imageEl = document.getElementById('previewImage');
+            if (image) {
+                imageEl.src = image;
+                imageEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'none';
+            }
+
+            // Thumbnail
+            const thumbnail = document.getElementById('thumbnailInput').value;
+            const thumbnailEl = document.getElementById('previewThumbnail');
+            if (thumbnail) {
+                thumbnailEl.src = thumbnail;
+                thumbnailEl.style.display = 'block';
+            } else {
+                thumbnailEl.style.display = 'none';
+            }
+
+            // Footer
+            const footer = document.getElementById('footerInput').value;
+            const footerEl = document.getElementById('previewFooter');
+            if (footer) {
+                footerEl.textContent = footer;
+                footerEl.style.display = 'block';
+            } else {
+                footerEl.style.display = 'none';
+            }
+
+            // Buttons
+            updateButtonsPreview();
+        }
+
+        function addButton() {
+            if (buttonCount >= 5) {
+                alert('Maximum 5 buttons allowed');
+                return;
+            }
+
+            buttonCount++;
+            const container = document.getElementById('buttonsContainer');
+            const row = document.createElement('div');
+            row.className = 'button-row';
+            row.id = `button-${buttonCount}`;
+            
+            row.innerHTML = `
+                <input type="text" class="form-input button-label" placeholder="Button label" oninput="updateButtonsPreview()">
+                <input type="text" class="form-input button-url" placeholder="https://..." oninput="updateButtonsPreview()">
+                <button class="btn-remove" onclick="removeButton(${buttonCount})">🗑️</button>
+            `;
+            
+            container.appendChild(row);
+            updateButtonsPreview();
+        }
+
+        function removeButton(id) {
+            document.getElementById(`button-${id}`).remove();
+            buttonCount--;
+            updateButtonsPreview();
+        }
+
+        function updateButtonsPreview() {
+            const buttonsContainer = document.getElementById('previewButtons');
+            buttonsContainer.innerHTML = '';
+
+            document.querySelectorAll('.button-row').forEach(row => {
+                const label = row.querySelector('.button-label').value;
+                const url = row.querySelector('.button-url').value;
+                
+                if (label && url) {
+                    const button = document.createElement('a');
+                    button.className = 'embed-button';
+                    button.textContent = label;
+                    button.href = url;
+                    button.target = '_blank';
+                    buttonsContainer.appendChild(button);
+                }
+            });
+        }
+
+        async function sendEmbed() {
+            const channelId = document.getElementById('channelSelect').value;
+            
+            if (!channelId) {
+                alert('Please select a channel');
+                return;
+            }
+
+            // Gather button data
+            const buttons = [];
+            document.querySelectorAll('.button-row').forEach(row => {
+                const label = row.querySelector('.button-label').value;
+                const url = row.querySelector('.button-url').value;
+                if (label && url) {
+                    buttons.push({ label, url });
+                }
+            });
+
+            const embedData = {
+                channel_id: channelId,
+                title: document.getElementById('titleInput').value,
+                description: document.getElementById('descriptionInput').value,
+                color: document.getElementById('colorInput').value,
+                author_name: document.getElementById('authorNameInput').value,
+                author_icon: document.getElementById('authorIconInput').value,
+                image_url: document.getElementById('imageInput').value,
+                thumbnail_url: document.getElementById('thumbnailInput').value,
+                footer_text: document.getElementById('footerInput').value,
+                buttons: buttons
+            };
+
+            try {
+                const response = await fetch('/api/send-embed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(embedData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Embed sent successfully!');
+                    // Optionally clear form
+                    // clearForm();
+                } else {
+                    alert('❌ Failed to send embed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Load channels on page load
+        loadChannels();
+        
+        // Initialize preview with default values
+        updatePreview();
+    </script>
+</body>
+</html>
