@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoop Creations - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .features {
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .feature {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .login-btn {
+            background: #5865F2;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .login-btn:hover {
+            background: #4752C4;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
+        }
+
+        .logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎨</div>
+        <h1>Scoop Creations</h1>
+        <p class="subtitle">Web Dashboard</p>
+        
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">🛡️</span>
+                <div>
+                    <strong>Full Moderation Panel</strong><br>
+                    <small>Ban, kick, timeout, and warn users from anywhere</small>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📊</span>
+                <div>
+                    <strong>Analytics & Insights</strong><br>
+                    <small>View server stats and moderation logs</small>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">⚡</span>
+                <div>
+                    <strong>Real-Time Updates</strong><br>
+                    <small>Instant access to member information</small>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📱</span>
+                <div>
+                    <strong>Mobile Friendly</strong><br>
+                    <small>Moderate from any device</small>
+                </div>
+            </div>
+        </div>
+
+        <a href="/login" class="login-btn">
+            Login with Discord
+        </a>
+    </div>
+</body>
+</html>
