@@ -585,5 +585,115 @@ def api_dm():
     else:
         return jsonify({"error": "Failed to send DM", "details": send_response.text}), 500
 
+@app.route('/embed-generator')
+@login_required
+@staff_required
+def embed_generator():
+    """Embed generator page"""
+    user = session['user']
+    return render_template('embed_generator.html', user=user)
+
+@app.route('/api/channels')
+@login_required
+@staff_required
+def api_channels():
+    """Get all guild channels"""
+    headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
+    response = requests.get(f"{DISCORD_API_BASE}/guilds/{GUILD_ID}/channels", headers=headers)
+    
+    if response.status_code == 200:
+        channels = response.json()
+        # Filter only text channels
+        text_channels = [
+            {"id": ch["id"], "name": ch["name"]} 
+            for ch in channels 
+            if ch["type"] == 0  # 0 = GUILD_TEXT
+        ]
+        return jsonify(text_channels)
+    else:
+        return jsonify({"error": "Failed to fetch channels"}), 500
+
+@app.route('/api/send-embed', methods=['POST'])
+@login_required
+@staff_required
+def api_send_embed():
+    """Send custom embed to a channel"""
+    data = request.json
+    channel_id = data.get('channel_id')
+    
+    if not channel_id:
+        return jsonify({"error": "Channel ID required"}), 400
+    
+    moderator = session['user']
+    
+    # Build embed object
+    embed = {}
+    
+    if data.get('title'):
+        embed['title'] = data['title']
+    
+    if data.get('description'):
+        embed['description'] = data['description']
+    
+    if data.get('color'):
+        # Convert hex to decimal
+        try:
+            color_hex = data['color'].replace('#', '')
+            embed['color'] = int(color_hex, 16)
+        except:
+            embed['color'] = 0xc8d0d6  # Default brand color
+    
+    if data.get('author_name'):
+        embed['author'] = {'name': data['author_name']}
+        if data.get('author_icon'):
+            embed['author']['icon_url'] = data['author_icon']
+    
+    if data.get('image_url'):
+        embed['image'] = {'url': data['image_url']}
+    
+    if data.get('thumbnail_url'):
+        embed['thumbnail'] = {'url': data['thumbnail_url']}
+    
+    if data.get('footer_text'):
+        embed['footer'] = {'text': data['footer_text']}
+    
+    # Build message payload
+    message_payload = {"embeds": [embed]}
+    
+    # Add buttons if provided
+    buttons = data.get('buttons', [])
+    if buttons:
+        components = []
+        action_row = {"type": 1, "components": []}  # Action Row
+        
+        for button in buttons[:5]:  # Max 5 buttons per row
+            if button.get('label') and button.get('url'):
+                action_row["components"].append({
+                    "type": 2,  # Button
+                    "style": 5,  # Link button
+                    "label": button['label'],
+                    "url": button['url']
+                })
+        
+        if action_row["components"]:
+            components.append(action_row)
+            message_payload["components"] = components
+    
+    # Send message to channel
+    headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}", "Content-Type": "application/json"}
+    response = requests.post(
+        f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+        headers=headers,
+        json=message_payload
+    )
+    
+    if response.status_code in [200, 201]:
+        # Log action
+        log_action('embed', channel_id, f"Channel {channel_id}", 
+                  moderator['id'], moderator['username'], f"Sent embed: {data.get('title', 'No title')}")
+        return jsonify({"success": True, "message": "Embed sent successfully"})
+    else:
+        return jsonify({"error": "Failed to send embed", "details": response.text}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
