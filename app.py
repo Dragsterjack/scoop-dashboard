@@ -11,11 +11,11 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Change this to a secure random key
 CORS(app)
 
-# ===== CONFIGURATION =====
-DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"
-DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"
-DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Change to your domain
-DISCORD_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET")
+DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/callback")
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
+GUILD_ID = int(os.environ.get("GUILD_ID", "1324404577608667157"))
 GUILD_ID = 1324404577608667157
 
 # Role IDs with permissions
