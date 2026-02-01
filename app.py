@@ -1,22 +1,22 @@
+import os
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_cors import CORS
 import requests
-import os
 from datetime import datetime, timedelta
 import json
 import sqlite3
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Change this to a secure random key
+app.secret_key = os.urandom(24)
 CORS(app)
 
-# ===== CONFIGURATION =====
-DISCORD_CLIENT_ID = "1467321198986920142"
-DISCORD_CLIENT_SECRET = "155KFuShJUHyM97knhR2KYEy0-yM7HCI"
-DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Change to your domain
-DISCORD_BOT_TOKEN = "MTQ2NzMyMTE5ODk4NjkyMDE0Mg.GB78YE.4cpQj9xTY9cFk7HkDw5tl7GFiWUqDfQYRBNkzY"
-GUILD_ID = 1324404577608667157
+# ===== CONFIGURATION - USING ENVIRONMENT VARIABLES FOR SECURITY =====
+DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID")           # ← This says "look for a variable named DISCORD_CLIENT_ID"
+DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET")   # ← This says "look for a variable named DISCORD_CLIENT_SECRET"
+DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/callback")
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")           # ← This says "look for a variable named DISCORD_BOT_TOKEN"
+GUILD_ID = int(os.environ.get("GUILD_ID", "1324404577608667157"))
 
 # Role IDs with permissions
 OWNER_ROLE_ID = 1462559124024983704
