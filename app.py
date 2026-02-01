@@ -14,7 +14,7 @@ CORS(app)
 # ===== CONFIGURATION - USING ENVIRONMENT VARIABLES FOR SECURITY =====
 DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET")
-DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/callback")
+DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "https://scoop-dashboard.onrender.com/callback")
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 GUILD_ID = int(os.environ.get("GUILD_ID", "1324404577608667157"))
 
