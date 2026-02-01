@@ -11,11 +11,11 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Change this to a secure random key
 CORS(app)
 
-DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID")
-DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET")
-DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/callback")
-DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
-GUILD_ID = int(os.environ.get("GUILD_ID", "1324404577608667157"))
+# ===== CONFIGURATION =====
+DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"
+DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"
+DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Change to your domain
+DISCORD_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
 GUILD_ID = 1324404577608667157
 
 # Role IDs with permissions
@@ -115,6 +115,50 @@ def log_action(action_type, target_user_id, target_user_name, moderator_id, mode
                reason, duration, datetime.now().isoformat()))
     conn.commit()
     conn.close()
+
+def send_dm_notification(user_id, action_type, reason, moderator_name, duration=None):
+    """Send DM notification to user about moderation action"""
+    try:
+        headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}", "Content-Type": "application/json"}
+        
+        # Create DM channel
+        dm_data = {"recipient_id": user_id}
+        dm_response = requests.post(
+            f"{DISCORD_API_BASE}/users/@me/channels",
+            headers=headers,
+            json=dm_data
+        )
+        
+        if dm_response.status_code != 200:
+            return False
+        
+        channel_id = dm_response.json()['id']
+        
+        # Create message based on action type
+        if action_type == "ban":
+            message = f"🚫 **You have been banned from Scoop Creations**\n\n**Reason:** {reason}\n**Moderator:** {moderator_name}\n\nIf you believe this was a mistake, please contact the server staff."
+        elif action_type == "kick":
+            message = f"👢 **You have been kicked from Scoop Creations**\n\n**Reason:** {reason}\n**Moderator:** {moderator_name}\n\nYou can rejoin the server, but please review the rules."
+        elif action_type == "timeout":
+            duration_text = duration if duration else "unknown duration"
+            message = f"⏱️ **You have been timed out in Scoop Creations**\n\n**Duration:** {duration_text}\n**Reason:** {reason}\n**Moderator:** {moderator_name}\n\nYou will not be able to send messages until the timeout expires."
+        elif action_type == "warn":
+            message = f"⚠️ **You have been warned in Scoop Creations**\n\n**Reason:** {reason}\n**Moderator:** {moderator_name}\n\nPlease review the server rules to avoid further warnings."
+        else:
+            message = f"📢 **Moderation Action**\n\n**Action:** {action_type}\n**Reason:** {reason}\n**Moderator:** {moderator_name}"
+        
+        # Send message
+        message_data = {"content": message}
+        send_response = requests.post(
+            f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+            headers=headers,
+            json=message_data
+        )
+        
+        return send_response.status_code in [200, 201]
+    except Exception as e:
+        print(f"Failed to send DM notification: {e}")
+        return False
 
 # ===== DECORATORS =====
 def login_required(f):
@@ -298,6 +342,9 @@ def api_ban():
     if not has_permission(moderator_member.get('roles', []), 'staff'):
         return jsonify({"error": "Insufficient permissions"}), 403
     
+    # Send DM notification BEFORE banning (they need to be in server to receive DM)
+    send_dm_notification(user_id, "ban", reason, moderator['username'])
+    
     # Execute ban via bot
     headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
     ban_data = {"delete_message_days": delete_days}
@@ -331,6 +378,9 @@ def api_kick():
     
     moderator = session['user']
     target_member = get_guild_member(user_id)
+    
+    # Send DM notification BEFORE kicking (they need to be in server to receive DM)
+    send_dm_notification(user_id, "kick", reason, moderator['username'])
     
     # Execute kick
     headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
@@ -377,9 +427,13 @@ def api_timeout():
     )
     
     if response.status_code == 200:
+        # Send DM notification
+        duration_text = f"{duration} minutes"
+        send_dm_notification(user_id, "timeout", reason, moderator['username'], duration_text)
+        
         target_user = target_member.get('user', {})
         log_action('timeout', user_id, target_user.get('username', 'Unknown'),
-                  moderator['id'], moderator['username'], reason, f"{duration} minutes")
+                  moderator['id'], moderator['username'], reason, duration_text)
         return jsonify({"success": True, "message": "User timed out successfully"})
     else:
         return jsonify({"error": "Failed to timeout user", "details": response.text}), 500
@@ -414,6 +468,9 @@ def api_warn():
     c.execute('SELECT COUNT(*) FROM warnings WHERE user_id = ?', (user_id,))
     warning_count = c.fetchone()[0]
     conn.close()
+    
+    # Send DM notification
+    send_dm_notification(user_id, "warn", reason, moderator['username'])
     
     # Log action
     log_action('warn', user_id, target_user.get('username', 'Unknown'),
