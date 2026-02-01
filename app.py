@@ -1,22 +1,22 @@
-import os
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_cors import CORS
 import requests
+import os
 from datetime import datetime, timedelta
 import json
 import sqlite3
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.urandom(24)  # Change this to a secure random key
 CORS(app)
 
-# ===== CONFIGURATION - USING ENVIRONMENT VARIABLES FOR SECURITY =====
-DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID")           # ← This says "look for a variable named DISCORD_CLIENT_ID"
-DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET")   # ← This says "look for a variable named DISCORD_CLIENT_SECRET"
-DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/callback")
-DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")           # ← This says "look for a variable named DISCORD_BOT_TOKEN"
-GUILD_ID = int(os.environ.get("GUILD_ID", "1324404577608667157"))
+# ===== CONFIGURATION =====
+DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"
+DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"
+DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Change to your domain
+DISCORD_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+GUILD_ID = 1324404577608667157
 
 # Role IDs with permissions
 OWNER_ROLE_ID = 1462559124024983704
@@ -475,6 +475,58 @@ def api_warnings(user_id):
     
     conn.close()
     return jsonify(warnings)
+
+@app.route('/api/dm', methods=['POST'])
+@login_required
+@staff_required
+def api_dm():
+    """Send a DM to a user"""
+    data = request.json
+    user_id = data.get('user_id')
+    message = data.get('message')
+    
+    if not user_id or not message:
+        return jsonify({"error": "User ID and message required"}), 400
+    
+    moderator = session['user']
+    target_member = get_guild_member(user_id)
+    
+    if not target_member:
+        return jsonify({"error": "User not found"}), 404
+    
+    # Create DM channel with user
+    headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}", "Content-Type": "application/json"}
+    
+    # Step 1: Create DM channel
+    dm_data = {"recipient_id": user_id}
+    dm_response = requests.post(
+        f"{DISCORD_API_BASE}/users/@me/channels",
+        headers=headers,
+        json=dm_data
+    )
+    
+    if dm_response.status_code != 200:
+        return jsonify({"error": "Failed to create DM channel", "details": dm_response.text}), 500
+    
+    dm_channel = dm_response.json()
+    channel_id = dm_channel['id']
+    
+    # Step 2: Send message to DM channel
+    message_data = {"content": message}
+    send_response = requests.post(
+        f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+        headers=headers,
+        json=message_data
+    )
+    
+    if send_response.status_code in [200, 201]:
+        # Log action
+        target_user = target_member.get('user', {})
+        log_action('dm', user_id, target_user.get('username', 'Unknown'),
+                  moderator['id'], moderator['username'], f"Sent DM: {message[:50]}...")
+        return jsonify({"success": True, "message": "DM sent successfully"})
+    else:
+        return jsonify({"error": "Failed to send DM", "details": send_response.text}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
